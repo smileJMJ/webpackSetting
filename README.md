@@ -1,21 +1,25 @@
 # webpackSetting
 webpack5 setting  
 
+<br/><br/>
 
 ## webpack 설치
 ```
 npm install --save-dev webpack webpack-cli webpack-merge
 ```
 
+<br/><br/>
 
 ## webpack 설정 파일 분리
 (why?) webpack 설정 분리 이유: development와 production 빌드 목표는 다르므로   
 -> webpack-merge 유틸리티 사용하여 공통 설정은 같이, 그 외의 설정은 환경별로 설정하도록 함   
 https://webpack.kr/guides/production/#setup
 
-
+<br/><br/>
 
 ## 공통 설정 (common.js)
+<br/>
+
 ### (1) Entry 설정
 https://webpack.kr/configuration/entry-context/#entry
 
@@ -29,9 +33,9 @@ entry: {
 
 // css의 경우 MiniCssExtractPlugin 사용 시, filename: 'css/[name].css'처럼 경로도 함께 넣어주면 css폴더안에 파일 생성됨 
 ```
+<br/>
 
-
-### (2) output
+### (2) Output 설정
 https://webpack.kr/configuration/output/
 
 * webpack-dev-server 사용 시에는 ouput은 production mode에서만 설정
@@ -57,7 +61,7 @@ module.exports = {
 }
 ```
 
-
+<br/>
 
 ### (3) Loader 설정
 https://webpack.kr/concepts/loaders/
@@ -131,7 +135,7 @@ module: {
 타입 검사를 다시 받으려면 ForkTsCheckerWebpackPlugin을 사용
 https://webpack.kr/guides/build-performance/#typescript-loader
 
-
+<br/>
 
 ### (4) Plugin 설정
 https://webpack.kr/plugins/ 
@@ -143,7 +147,7 @@ npm install --save-dev html-webpack-plugin mini-css-extract-plugin
 * HtmlWebpackPlugin
 * (선택사항) BannerPlugin
 
-
+<br/>
 
 ### (5. 선택사항) optimization.splitChunk plugin 설정
 * SplitChunksPlugin 플러그인 사용, 설치 없이 즉시 사용 가능
@@ -160,7 +164,7 @@ module.exports = {
 }
 ```
 
-
+<br/>
 
 ### (6. 선택사항) runtime시 실행할 코드만 별도의 청크로 분리 가능
 https://webpack.kr/configuration/optimization/#optimizationruntimechunk
@@ -172,7 +176,7 @@ module.exports = {
     },
 }
 ```
-
+<br/>
 
 ### (7. 선택사항) 변경될 가능성이 적은 코드는 별도의 vendor 청크로 추출해서 사용
 * lodash, react 등 타사 라이브러리는 로컬 소스보다 변경될 가능성이 적기 때문에 vendor 청크로 추출해서 사용 가능함
@@ -193,7 +197,7 @@ modules.exports = {
     }
 }
 ```
-
+<br/>
 
 ### (8. 선택사항) externals - import 된 패키지의 번들링 방지하고 런타임에 외부종속성 검색함
 https://webpack.kr/configuration/externals/
@@ -221,9 +225,16 @@ import $ from 'jquery';
 $('.my-element').animate(/* ... */);
 ```
 
+<br/><br/>
 
 ## development mode (dev.js)
+
+https://webpack.kr/guides/development/
+<br/>
+
 ### (1) sourcemap 사용
+<br/>
+
 ### (2) webpack watch또는 webpack-dev-server  사용
 https://webpack.kr/guides/build-performance/#incremental-builds 
 https://webpack.kr/guides/build-performance/#compile-in-memory
@@ -231,6 +242,7 @@ https://webpack.kr/guides/build-performance/#compile-in-memory
 ```
 npm install --save-dev webpack-dev-server
 ```
+<br/>
 
 ### (3) HMR(Hot Module Replacement) / LiveReload 설정
 https://webpack.kr/guides/hot-module-replacement/
@@ -244,17 +256,26 @@ https://webpack.kr/guides/hot-module-replacement/
 ※ TerserPlugin 등 플러그인 사용 및 output hash 관련은 Production 모드에서 사용하기   
 https://webpack.kr/guides/build-performance/#avoid-production-specific-tooling
 
-
+<br/><br/>
 
 ## production mode (prod.js)
 https://webpack.kr/guides/production/
+<br/>
 
 ### (1) webpack-dev-server 사용 시 ouput 설정
+<br/>
+
 ### (2) TerserPlugin 
+<br/>
+
 ### (3) CSS minimize - CssMinimizerPlugin 사용 
 https://webpack.kr/plugins/mini-css-extract-plugin/#minimizing-for-production
+<br/>
+
 ### (4) sourcemap 사용 지양 (빌드성능개선)
 https://webpack.kr/guides/build-performance/#source-maps
+<br/>
+
 ### (5) (선택사항) output.pathInfo 끄기 
 - webpack은 출력 번들에 경로 정보를 생성하는 기능이 있지만, 많은 모듈을 번들로 묶을 경우엔 가비지 컬렉션에 영향을 주어 해당 기능 끄는게 빌드성능에 좋음  
 https://webpack.kr/guides/build-performance/#avoid-production-specific-tooling
@@ -262,9 +283,11 @@ https://webpack.kr/guides/build-performance/#avoid-production-specific-tooling
 ※ tree shaking   
 https://webpack.kr/guides/tree-shaking/
 
-
+<br/><br/>
 
 ## package.json 설정
+<br/>
+
 ### (1) 환경옵션 --env 로 development, production 빌드 실행
 https://webpack.kr/guides/environment-variables/
 ```
@@ -272,15 +295,18 @@ npx webpack --env goal=local --env production --progress
 ```
 ※  --mode와 --env 차이
 
-
+<br/><br/>
 
 ## Typescript
 https://webpack.kr/guides/typescript/
+<br/>
 
 ### (1) typescript 및 ts-loader 설치
 ```
 npm install --save-dev typescript ts-loader
 ```
+<br/>
+
 ### (2) tsconfig.json 추가
 ```
 {
@@ -298,7 +324,11 @@ npm install --save-dev typescript ts-loader
     "exclude": ["node_modules"] 
 }
 ```
+<br/>
+
 ### (3) webpack loader에 ts-loader 추가
+<br/>
+
 ### (4) image 등 assets 타입 정의 필요 
 * typing.d.ts 생성
 ```
