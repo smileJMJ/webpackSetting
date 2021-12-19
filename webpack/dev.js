@@ -12,4 +12,7 @@ module.exports = merge(common(mode), {
         port: 7777
     },
     devtool: 'inline-source-map',
+    optimization: {
+        runtimeChunk: 'single' // css entry는 webpack-dev-server HMR 동작하지 않는데, 해당 속성 설정 시 HMR 사용 가능
+    }
 });

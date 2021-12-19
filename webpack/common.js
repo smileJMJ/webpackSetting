@@ -1,24 +1,38 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const RemoveEmptyScripts = require('webpack-remove-empty-scripts');
 
 module.exports = (mode) => {
     const isDevMode = mode !== 'production';
 
     return {
         entry: {
-            'js/polyfill': '@babel/polyfill',
-            'css/style': './src/css/style.scss', // style.js도 생김
+            'css/style': './src/css/style.scss', 
             'js/main': './src/js/main.js',
             'js/index': './src/js/index.ts'
         },
+        target: ['web', 'es5'], // babel에서 es6+을 transcompile 해주어도 webpack에서 es6+ 사용하도록 설정되어 있어 es5 target 추가
         module: {
             rules: [
                 {
                     test: /\.js$/,
                     include: path.resolve(__dirname, '../src/js'),
                     exclude: /node_modules/,
-                    loader: 'babel-loader'
+                    loader: 'babel-loader',
+                    options: {
+                        presets: [
+                            [
+                                '@babel/preset-env',
+                                {
+                                    "useBuiltIns": "usage",
+                                    "corejs": "3"
+                                },
+                                '@babel/preset-typescript',
+                            ]
+                        ]
+                    }
+
                 },
                 {
                     test: /\.ts(x?)$/,
@@ -51,9 +65,10 @@ module.exports = (mode) => {
             ]
         },
         plugins: [
+            new RemoveEmptyScripts(),
             new HtmlWebpackPlugin(),
             new MiniCssExtractPlugin({
-                filename: `css/${isDevMode ? '[name].css' : '[name].[hash].css'}`
+                filename: `${isDevMode ? '[name].css' : '[name].[hash].css'}`
             })
         ],
         resolve: {

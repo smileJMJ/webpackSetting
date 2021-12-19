@@ -33,6 +33,54 @@ entry: {
 
 // css의 경우 MiniCssExtractPlugin 사용 시, filename: 'css/[name].css'처럼 경로도 함께 넣어주면 css폴더안에 파일 생성됨 
 ```
+* webpack은 기본적으로 번들 후 js 파일을 생성하여, css를 entry에 단독 추가 시에 css, js 파일 둘다 생성되는 이슈 발생   
+-> webpack-fix-style-only-entries 또는 webpack-remove-empty-scripts 플러그인 사용하여 js 제거
+```
+npm install --save-dev webpack-fix-style-only-entries
+
+// webpack.config.js
+const FixStyleOnlyEntries = require('webpack-fix-style-only-entries');
+
+modules.exports = {
+    plugins: [
+        new FixStyleOnlyEntries()
+    ]
+}
+
+```
+※ 단, FixStyleOnlyEntries 플러그인은 webpack-dev-server 실행 시   
+"Module.entryModule: Multiple entry modules are not supported by the deprecated API (Use the new ChunkGroup API)"
+에러 발생.   
+-> Webpack5로 버전업되면서 해당 플러그인이 불안정하다는 글 확인.   
+webpack-remove-empty-scripts 플러그인 추천해줌   
+
+```
+npm install --save-dev webpack-remove-empty-scripts
+
+// webpack.config.js
+const RemoveEmptyScripts = require('webpack-remove-empty-scripts');
+
+modules.exports = {
+    plugins: [
+        new RemoveEmptyScripts()
+    ]
+}
+
+```
+* css entry는 webpack-dev-server의 HMR 정상동작하지 않음.   
+-> optionmization.runtimeChunk: 'single' 로 해결 가능   
+https://github.com/webpack/webpack-dev-server/issues/2792
+
+```
+// dev.js
+
+{
+    optimization: {
+        runtimeChunk: 'single'
+    }
+}
+```
+
 <br/>
 
 ### (2) Output 설정
@@ -71,6 +119,53 @@ npm install --save-dev babel-loader @babel/core @babel/preset-env sass-loader cs
 npm install --save @babel/polyfill // polyfill은 런타임때 다른 js보다 먼저 실행되어야 함
 ```
 * babel-loader, sass-loader, css-loader 등
+* webpack에서 babel 셋팅 시 babel-loader의 간단한 설정으로 사용할 수 있으나, 커스터마이징 하려면 babel.config.js 생성하여 작업 가능   
+https://webpack.js.org/loaders/babel-loader/#customize-config-based-on-webpack-target
+* [babel] es6+ -> es5 transcompile 방법   
+(1) core-js (현재)
+core-js 설치 및 webpack.config.js의 babel-loader 설정 시 options 추가해주기
+https://webpack.js.org/loaders/babel-loader/#options   
+https://webpack.js.org/loaders/babel-loader/#customize-config-based-on-webpack-target
+```
+npm install --save core-js
+
+// webpack.config.js
+{
+    {
+        test: /\.js$/,
+        include: path.resolve(__dirname, '../src/js'),
+        exclude: /node_modules/,
+        loader: 'babel-loader',
+        options: {
+            presets: [
+                [
+                    '@babel/preset-env',
+                    '@babel/preset-typescript',
+                    {
+                        'useBuiltIns': 'usage',
+                        'corejs': '3'
+                    }
+                ]
+            ]
+        }
+
+    },
+}
+```
+(2) @babel/polyfill (구버전)
+```
+npm install --save @babel/polyfill
+npm install --save-dev @babel/plugin-transform-arrow-functions
+```
+
+※ babel-loader로 es5 transcompile 되었으나 번들파일에서 화살표 함수 등이 남아있어 ie11에서 실행할 수 없을 때   
+-> webpack의 `target: ['web', 'es5']`로 설정   
+```
+target: ['web', 'es5'], // babel에서 es6+을 transcompile 해주어도 webpack에서 es6+ 사용하도록 설정되어 있어 es5 target 추가
+```
+
+<br/>
+
 * MiniCssExtractPlugin 인스턴스.loader 사용
 * image/font 등 기존에 url-loader, file-loader로 처리하던 리소스들을 webpack5부턴 애셋 모듈을 이용해 처리할 수 있음
   https://webpack.kr/guides/asset-modules/ 
@@ -251,7 +346,14 @@ https://webpack.kr/guides/hot-module-replacement/
 * webpack-dev-server v4 부터 HMR 기본적으로 활성화되어 있음
 * webpack-dev-server에도 live reload 속성 있음
 * webpack watch 사용 시에는 vscode Live Server Extension 사용하여 로컬 서버 띄우면 Live Reloading 처럼 사용 가능   
-(dist폴더의 index.html을 Live Server로 띄움 ->  코드 수정 -> webpack watch로 변화 감지 및 재빌드 -> index.html 리로드)
+(dist폴더의 index.html을 Live Server로 띄움 ->  코드 수정 -> webpack watch로 변화 감지 및 재빌드 -> index.html 리로드)   
+* Entry에 css 설정 시, 'webpack-remove-empty-scripts' 플러그인을 사용하여 css 번들 시 생성되는 js를 제거하는데 이 때 HMR이 정상 동작하지 않음.   
+-> development일 때만 `optimization.runtimeChunk: 'single'` 설정함
+```
+optimization: {
+    runtimeChunk: 'single' // css entry는 webpack-dev-server HMR 동작하지 않는데, 해당 속성 설정 시 HMR 사용 가능
+}
+```
 
 ※ TerserPlugin 등 플러그인 사용 및 output hash 관련은 Production 모드에서 사용하기   
 https://webpack.kr/guides/build-performance/#avoid-production-specific-tooling
@@ -266,6 +368,30 @@ https://webpack.kr/guides/production/
 <br/>
 
 ### (2) TerserPlugin 
+* minimize, uglify, 콘솔로그 제거 등
+* webpack5 이상부터 내재되어 있지만, 옵션 등 커스텀하게 쓰려면 설치 필요!
+```
+npm install --save-dev terser-webpack-plugin
+
+// prod.js
+const TerserPlugin = require('terser-webpack-plugin');
+
+{
+    optimization: {
+        minimize: true,
+        minimizer: [
+            new TerserPlugin({
+                terserOptions: {
+                    compress: {
+                        drop_console: true // 콘솔 로그 제거
+                    }
+                },
+                extractComments: true // 코멘트 모아서 파일명.LICENSE.txt 생성
+            })
+        ]
+    }
+}
+```
 <br/>
 
 ### (3) CSS minimize - CssMinimizerPlugin 사용 
@@ -293,7 +419,6 @@ https://webpack.kr/guides/environment-variables/
 ```
 npx webpack --env goal=local --env production --progress 
 ```
-※  --mode와 --env 차이
 
 <br/><br/>
 
